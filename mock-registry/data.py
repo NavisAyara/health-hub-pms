@@ -1,0 +1,17 @@
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
+class PatientRegistryRecord(db.Model):
+    __tablename__ = "registry_records"
+
+    patient_id = db.Column(db.String(20), primary_key=True)
+    national_id = db.Column(db.String(20))
+    first_name = db.Column(db.String(18))
+    last_name = db.Column(db.String(18))
+    date_of_birth = db.Column(db.Date)
+    gender = db.Column(db.Enum("MALE", "FEMALE"), nullable=False)
+    phone = db.Column(db.String(12))
+    email = db.Column(db.String(20))
+    address = db.Column(db.String(60))
+    emergency_contact = db.Column(db.String(20))
