@@ -11,7 +11,7 @@ from database.models import db
 
 app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("MARIADB_URI")
 
 db.init_app(app)
 
