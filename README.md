@@ -1,2 +1,2 @@
 # health-hub-pms
-Patient Management System for HealtHub Clinic (fictional)
+Patient Management System for HealthHub Clinic
