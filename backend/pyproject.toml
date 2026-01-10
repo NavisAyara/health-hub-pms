@@ -8,5 +8,8 @@ dependencies = [
     "flask>=3.1.2",
     "flask-cors>=6.0.2",
     "flask-migrate>=4.1.0",
+    "flask-restful>=0.3.10",
     "flask-sqlalchemy>=3.1.1",
+    "mariadb>=1.1.14",
+    "python-dotenv>=1.2.1",
 ]
