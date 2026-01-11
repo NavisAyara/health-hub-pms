@@ -1,3 +1,3 @@
 from .models import (
     User, Patient, HealthCareFacility,
-    HealthCareWorker, ConsentRecord, AccessLog)
+    HealthCareWorker, ConsentRecord, AccessLog, db)

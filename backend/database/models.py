@@ -1,6 +1,7 @@
 from enum import Enum
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy import MetaData
 
 metadata = MetaData()
@@ -37,7 +38,7 @@ class Status(Enum):
     REVOKED = "revoked"
 
 
-class User(db.Model):
+class User(db.Model, SerializerMixin):
     __tablename__ = "users"
 
     user_id = db.Column(db.Integer, primary_key=True)
@@ -47,8 +48,10 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     last_login = db.Column(db.DateTime, nullable=True)
 
+    serialize_rules = ("-patient.user", "-healthcare_worker.user")
 
-class Patient(db.Model):
+
+class Patient(db.Model, SerializerMixin):
     __tablename__ = "patients"
 
     patient_id = db.Column(db.Integer, primary_key=True)
@@ -65,7 +68,7 @@ class Patient(db.Model):
     consent_records = db.relationship("ConsentRecord", back_populates="patient")
 
 
-class HealthCareFacility(db.Model):
+class HealthCareFacility(db.Model, SerializerMixin):
     __tablename__ = "healthcare_facilities"
 
     facility_id = db.Column(db.Integer, primary_key=True)
@@ -79,7 +82,7 @@ class HealthCareFacility(db.Model):
     consent_records = db.relationship("ConsentRecord", back_populates="facility")
 
 
-class HealthCareWorker(db.Model):
+class HealthCareWorker(db.Model, SerializerMixin):
     __tablename__ = "healthcare_workers"
 
     worker_id = db.Column(db.Integer, primary_key=True)
@@ -95,7 +98,7 @@ class HealthCareWorker(db.Model):
     access_logs = db.relationship("AccessLog", back_populates="healthcare_worker")
 
 
-class ConsentRecord(db.Model):
+class ConsentRecord(db.Model, SerializerMixin):
     __tablename__ = "consent_records"
 
     consent_id = db.Column(db.Integer, primary_key=True)
@@ -109,11 +112,11 @@ class ConsentRecord(db.Model):
     facility_id = db.Column(db.Integer, db.ForeignKey("healthcare_facilities.facility_id"))
     granted_by = db.Column(db.Integer, db.ForeignKey("users.user_id"))
 
-    facility = db.relationship("HealthCareFacilities", back_populates="consent_records")
+    facility = db.relationship("HealthCareFacility", back_populates="consent_records")
     patient = db.relationship("Patient", back_populates="consent_records")
 
 
-class AccessLog(db.Model):
+class AccessLog(db.Model, SerializerMixin):
     __tablename__ = "access_logs"
 
     log_id = db.Column(db.Integer, primary_key=True)
