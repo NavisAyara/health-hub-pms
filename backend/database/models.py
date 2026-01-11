@@ -56,7 +56,7 @@ class User(db.Model, SerializerMixin):
 class Patient(db.Model, SerializerMixin):
     __tablename__ = "patients"
 
-    patient_id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.String(20), primary_key=True)
     national_id_encrypted = db.Column(db.String(120))
     first_name = db.Column(db.String(18))
     last_name = db.Column(db.String(18))
@@ -114,7 +114,7 @@ class ConsentRecord(db.Model, SerializerMixin):
     purpose = db.Column(db.Text(100))
     status = db.Column(db.Enum(Status), default=Status.ACTIVE)
 
-    patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"))
+    patient_id = db.Column(db.String(20), db.ForeignKey("patients.patient_id"))
     facility_id = db.Column(db.Integer, db.ForeignKey("healthcare_facilities.facility_id"))
     granted_by = db.Column(db.Integer, db.ForeignKey("users.user_id"))
 
@@ -134,7 +134,7 @@ class AccessLog(db.Model, SerializerMixin):
     timestamp = db.Column(db.DateTime, server_default=db.func.now())
     ip_address = db.Column(db.String(12))
 
-    patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"))
+    patient_id = db.Column(db.String(20), db.ForeignKey("patients.patient_id"))
     accessed_by = db.Column(db.Integer, db.ForeignKey("healthcare_workers.worker_id"))
 
     patient = db.relationship("Patient", back_populates="access_logs", uselist=False)
