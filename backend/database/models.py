@@ -3,7 +3,6 @@ from enum import Enum
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy import MetaData
-
 metadata = MetaData()
 
 db = SQLAlchemy(metadata=metadata)
@@ -48,6 +47,9 @@ class User(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     last_login = db.Column(db.DateTime, nullable=True)
 
+    patient = db.relationship("Patient", back_populates="user", uselist=False)
+    healthcare_worker = db.relationship("HealthCareWorker", back_populates="user", uselist=False)
+
     serialize_rules = ("-patient.user", "-healthcare_worker.user")
 
 
@@ -55,7 +57,7 @@ class Patient(db.Model, SerializerMixin):
     __tablename__ = "patients"
 
     patient_id = db.Column(db.Integer, primary_key=True)
-    national_id_encrypted = db.Column(db.String(50))
+    national_id_encrypted = db.Column(db.String(120))
     first_name = db.Column(db.String(18))
     last_name = db.Column(db.String(18))
     date_of_birth = db.Column(db.Date)
@@ -63,7 +65,7 @@ class Patient(db.Model, SerializerMixin):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"))
     
-    user = db.relationship("User", backref="patient")
+    user = db.relationship("User", back_populates="patient", uselist=False)
     access_logs = db.relationship("AccessLog", back_populates="patient")
     consent_records = db.relationship("ConsentRecord", back_populates="patient")
 
@@ -93,8 +95,8 @@ class HealthCareWorker(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"))
     facility_id = db.Column(db.Integer, db.ForeignKey("healthcare_facilities.facility_id"))
 
-    healthcare_facility = db.relationship("HealthCareFacility", back_populates="healthcare_workers")
-    user = db.relationship("User", backref="healthcare_worker")
+    healthcare_facility = db.relationship("HealthCareFacility", back_populates="healthcare_workers", uselist=False)
+    user = db.relationship("User", back_populates="healthcare_worker", uselist=False)
     access_logs = db.relationship("AccessLog", back_populates="healthcare_worker")
 
 
@@ -112,8 +114,8 @@ class ConsentRecord(db.Model, SerializerMixin):
     facility_id = db.Column(db.Integer, db.ForeignKey("healthcare_facilities.facility_id"))
     granted_by = db.Column(db.Integer, db.ForeignKey("users.user_id"))
 
-    facility = db.relationship("HealthCareFacility", back_populates="consent_records")
-    patient = db.relationship("Patient", back_populates="consent_records")
+    facility = db.relationship("HealthCareFacility", back_populates="consent_records", uselist=False)
+    patient = db.relationship("Patient", back_populates="consent_records", uselist=False)
 
 
 class AccessLog(db.Model, SerializerMixin):
@@ -129,5 +131,5 @@ class AccessLog(db.Model, SerializerMixin):
     patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"))
     accessed_by = db.Column(db.Integer, db.ForeignKey("healthcare_workers.worker_id"))
 
-    patient = db.relationship("Patient", back_populates="access_logs")
-    healthcare_worker = db.relationship("HealthCareWorker", back_populates="access_logs")
+    patient = db.relationship("Patient", back_populates="access_logs", uselist=False)
+    healthcare_worker = db.relationship("HealthCareWorker", back_populates="access_logs", uselist=False)

@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from database.models import db
+from database import db
 from routes.auth import LoginRoute, RegisterRoute
 
 app = Flask(__name__)
