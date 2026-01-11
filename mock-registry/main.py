@@ -5,6 +5,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 load_dotenv()
 
+from utils import decrypt_id
+
 import os
 from functools import wraps
 
@@ -39,7 +41,8 @@ def api_key_required(f):
 def patient_data():
     received_id = request.args.get("national_id")
 
-    patient = db.session.query(PatientRegistryRecord).filter_by(national_id=received_id).first()
+    patient = db.session.query(PatientRegistryRecord).filter_by(national_id=decrypt_id(received_id)).first()
+    
 
     if patient:
         response = make_response(
@@ -52,6 +55,24 @@ def patient_data():
     response.headers["Content-Type"] = "json"
 
     return response
+
+@api_key_required
+@app.route("/api/registry/patients")
+def get_patient_id():
+    received_id = request.args.get("national_id")
+
+    patient = db.session.query(PatientRegistryRecord).filter_by(national_id=received_id).first()
+
+    if patient:
+        response = make_response(
+            {"patient_id": patient.id}
+        )
+
+        return response
+
+    response = make_response({"data": "not found!"}, 404)
+    response.headers["Content-Type"] = "json"
+
 
 @app.errorhandler(404)
 def not_found_handler(error):
