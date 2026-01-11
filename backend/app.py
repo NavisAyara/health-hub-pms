@@ -11,7 +11,7 @@ load_dotenv()
 
 from database import db
 from routes import LoginRoute, RegisterRoute
-from routes import NewConsent
+from routes import NewConsent, GetConsents, GetConsentByID
 
 app = Flask(__name__)
 
@@ -33,8 +33,10 @@ api.add_resource(LoginRoute, "/login")
 api.add_resource(RegisterRoute, "/register")
 
 api.add_resource(NewConsent, "/api/consents")
+api.add_resource(GetConsents, "/api/consents/patient/<url_id>")
+api.add_resource(GetConsentByID, "/api/consents/<consent_id>/revoke")
 
 
 @app.errorhandler(404)
 def resource_not_found(error):
-    return {"error": "bad resource"}
+    return {"error": "bad resource"}, 404

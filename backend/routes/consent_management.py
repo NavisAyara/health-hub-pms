@@ -5,7 +5,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import request, make_response
 
 from database import ConsentRecord, Patient, HealthCareFacility, User
-from database import UserRole
+from database import UserRole, Status
 from database import db
 
 class NewConsent(Resource):
@@ -50,11 +50,11 @@ class NewConsent(Resource):
 
 class GetConsents(Resource):
 
-    @jwt_required
+    @jwt_required()
     def get(self, url_id):
         user_id = get_jwt_identity()
 
-        user = db.session.query(User).filter_by(user_id=user_id).first()
+        user = db.session.query(User).filter_by(user_id=int(user_id)).first()
 
         if user.role == UserRole.PATIENT and url_id == user_id or user.role == UserRole.ADMIN:
             consents = db.session.query(ConsentRecord).filter_by(granted_by=user_id).all()
@@ -68,3 +68,21 @@ class GetConsents(Resource):
 
         else:
             return make_response({"error": "unauthorized"}, 401)
+        
+
+class GetConsentByID(Resource):
+
+    @jwt_required()
+    def patch(self, consent_id):
+        user_id = get_jwt_identity()
+        consent_record = db.session.query(ConsentRecord).filter_by(consent_id=consent_id).first()
+
+        if consent_record and consent_record.granted_by == int(user_id):
+            consent_record.status = Status.REVOKED
+            db.session.commit()
+
+            return make_response(consent_record.to_dict(), 200)
+        
+        else:
+            return make_response({"error": "unauthorized"}, 401)
+
