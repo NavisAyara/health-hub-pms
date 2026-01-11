@@ -7,6 +7,7 @@ from flask_bcrypt import Bcrypt
 from utils import encrypt_id
 
 from database import User, Patient, HealthCareWorker, HealthCareFacility, db
+from database import UserRole
 
 bcrypt = Bcrypt()
 
@@ -56,7 +57,7 @@ class RegisterRoute(Resource):
                 case "PATIENT":
                     response = make_response(new_user.to_dict(rules=("-healthcare_worker", )), 201)
                 case "HEALTHCARE_WORKER":
-                    response = make_response(new_user.to_dict(rules=("-patient", )))
+                    response = make_response(new_user.to_dict(rules=("-patient", )), 201)
             
             return response
 
@@ -73,12 +74,27 @@ class LoginRoute(Resource):
         email = request.json.get("email", None)
         password = request.json.get("password", None)
 
-        if email != "test" or password != "test":
-            return jsonify({"msg": "Bad username or password"}), 401
+        user = db.session.query(User).filter_by(email=email).first()
+
+        if user and bcrypt.check_password_hash(user.password_hash, str(password).encode("utf-8")):
+            access_token = create_access_token(identity=user.user_id)
+            refresh_token = create_refresh_token(identity=user.user_id)
+            user.last_login = db.func.now()
+            db.session.commit()
+            match user.role:
+                case UserRole.PATIENT:
+                    current_user = user.to_dict(rules=("-healthcare_worker", ))
+                    return jsonify(access_token=access_token, refresh_token=refresh_token, user=current_user)
+                case UserRole.HEALTHCARE_WORKER:
+                    current_user = user.to_dict(rules=("-patient", ))
+                    return jsonify(access_token=access_token, refresh_token=refresh_token, user=current_user)
         
-        access_token = create_access_token(identity=email)
-        refresh_token = create_refresh_token(identity=email)
-        return jsonify(access_token=access_token, refresh_token=refresh_token)
+        else:
+            response = make_response({
+                "user": "not_found"
+            }, 404)
+
+            return response
     
 class RefreshRoute(Resource):
     method_decorators = [jwt_required(refresh=True)]

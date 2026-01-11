@@ -41,8 +41,8 @@ class User(db.Model, SerializerMixin):
     __tablename__ = "users"
 
     user_id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(20))
-    password_hash = db.Column(db.String(200))
+    email = db.Column(db.String(20), unique=True, nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
     role = db.Column(db.Enum(UserRole), default=UserRole.PATIENT)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     last_login = db.Column(db.DateTime, nullable=True)
@@ -74,9 +74,9 @@ class HealthCareFacility(db.Model, SerializerMixin):
     __tablename__ = "healthcare_facilities"
 
     facility_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20))
+    name = db.Column(db.String(20), unique=True)
     facility_type = db.Column(db.Enum(FacilityType), default=FacilityType.HOSPITAL)
-    license_number = db.Column(db.String(20))
+    license_number = db.Column(db.String(20), unique=True)
     location = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
@@ -88,7 +88,7 @@ class HealthCareWorker(db.Model, SerializerMixin):
     __tablename__ = "healthcare_workers"
 
     worker_id = db.Column(db.Integer, primary_key=True)
-    license_number = db.Column(db.String(20))
+    license_number = db.Column(db.String(20), unique=True)
     job_title = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
