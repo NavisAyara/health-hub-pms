@@ -69,6 +69,8 @@ class Patient(db.Model, SerializerMixin):
     access_logs = db.relationship("AccessLog", back_populates="patient")
     consent_records = db.relationship("ConsentRecord", back_populates="patient")
 
+    serialize_rules = ("-consent_records.patient", "-access_logs.patient", "-user.patient")
+
 
 class HealthCareFacility(db.Model, SerializerMixin):
     __tablename__ = "healthcare_facilities"
@@ -82,6 +84,8 @@ class HealthCareFacility(db.Model, SerializerMixin):
 
     healthcare_workers = db.relationship("HealthCareWorker", back_populates="healthcare_facility")
     consent_records = db.relationship("ConsentRecord", back_populates="facility")
+
+    serialize_rules = ("-healthcare_workers.healthcare_facility", "-consent_records.facility")
 
 
 class HealthCareWorker(db.Model, SerializerMixin):
@@ -108,7 +112,7 @@ class ConsentRecord(db.Model, SerializerMixin):
     granted_at = db.Column(db.DateTime, nullable=True)
     expires_at = db.Column(db.DateTime, nullable=True)
     purpose = db.Column(db.Text(100))
-    status = db.Column(db.Enum(Status))
+    status = db.Column(db.Enum(Status), default=Status.ACTIVE)
 
     patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"))
     facility_id = db.Column(db.Integer, db.ForeignKey("healthcare_facilities.facility_id"))
@@ -116,6 +120,8 @@ class ConsentRecord(db.Model, SerializerMixin):
 
     facility = db.relationship("HealthCareFacility", back_populates="consent_records", uselist=False)
     patient = db.relationship("Patient", back_populates="consent_records", uselist=False)
+
+    serialize_rules = ("-facility.consent_records", "-patient.consent_records")    
 
 
 class AccessLog(db.Model, SerializerMixin):

@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from database import db
-from routes.auth import LoginRoute, RegisterRoute
+from routes import LoginRoute, RegisterRoute
+from routes import NewConsent
 
 app = Flask(__name__)
 
@@ -30,6 +31,8 @@ jwt = JWTManager(app)
 
 api.add_resource(LoginRoute, "/login")
 api.add_resource(RegisterRoute, "/register")
+
+api.add_resource(NewConsent, "/api/consents")
 
 
 @app.errorhandler(404)

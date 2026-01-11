@@ -77,8 +77,8 @@ class LoginRoute(Resource):
         user = db.session.query(User).filter_by(email=email).first()
 
         if user and bcrypt.check_password_hash(user.password_hash, str(password).encode("utf-8")):
-            access_token = create_access_token(identity=user.user_id)
-            refresh_token = create_refresh_token(identity=user.user_id)
+            access_token = create_access_token(identity=str(user.user_id))
+            refresh_token = create_refresh_token(identity=str(user.user_id))
             user.last_login = db.func.now()
             db.session.commit()
             match user.role:
