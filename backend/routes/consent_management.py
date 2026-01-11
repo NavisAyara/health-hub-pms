@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from flask import request
+from flask import request, make_response
 
 from database import ConsentRecord, Patient, HealthCareFacility, User
 from database import UserRole
@@ -48,3 +48,23 @@ class NewConsent(Resource):
         
         return {"error": "not found"}, 404
 
+class GetConsents(Resource):
+
+    @jwt_required
+    def get(self, url_id):
+        user_id = get_jwt_identity()
+
+        user = db.session.query(User).filter_by(user_id=user_id).first()
+
+        if user.role == UserRole.PATIENT and url_id == user_id or user.role == UserRole.ADMIN:
+            consents = db.session.query(ConsentRecord).filter_by(granted_by=user_id).all()
+
+            response = make_response(
+                [consent_record.to_dict() for consent_record in consents],
+                200
+            )
+
+            return response
+
+        else:
+            return make_response({"error": "unauthorized"}, 401)

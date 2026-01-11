@@ -3,6 +3,12 @@ from flask_restful import Resource
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required
 from flask_jwt_extended import get_jwt_identity
 from flask_bcrypt import Bcrypt
+import requests
+import json
+import os
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from utils import encrypt_id
 
@@ -18,6 +24,15 @@ class RegisterRoute(Resource):
         national_id = request.json.get("national_id")
         national_id_encrypted = encrypt_id(national_id)
         password_hash = bcrypt.generate_password_hash(password, rounds=10)
+
+        patient_id_response = requests.get(
+            url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id_encrypted}",
+            headers={
+                "X-API-Key": os.getenv("REGISTRY_API_KEY")
+            })
+        print(patient_id_response.json())
+        patient_id = patient_id_response.json()["patient_id"]
+
         if role != "ADMIN":
             new_user = User(
                 email=request.json.get("email"),
@@ -31,7 +46,8 @@ class RegisterRoute(Resource):
             if role == "PATIENT":
                 new_patient = Patient(
                     national_id_encrypted=national_id_encrypted,
-                    user_id=new_user.user_id
+                    user_id=new_user.user_id,
+                    patient_id=patient_id
                 )
 
                 db.session.add(new_patient)
