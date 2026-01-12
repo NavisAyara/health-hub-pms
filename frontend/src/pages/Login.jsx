@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../utils/api'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -15,9 +16,8 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const res = await fetch('http://127.0.0.1:5000/login', {
+      const res = await api('/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
 
