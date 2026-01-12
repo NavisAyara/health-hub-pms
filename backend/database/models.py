@@ -3,9 +3,10 @@ from enum import Enum
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy import MetaData
-metadata = MetaData()
 
+metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
+
 
 class UserRole(Enum):
     PATIENT = "patient"
@@ -50,7 +51,15 @@ class User(db.Model, SerializerMixin):
     patient = db.relationship("Patient", back_populates="user", uselist=False)
     healthcare_worker = db.relationship("HealthCareWorker", back_populates="user", uselist=False)
 
-    serialize_rules = ("-patient.user", "-healthcare_worker.user")
+    serialize_rules = (
+        "-password_hash",
+        "-patient.user",
+        "-patient.consent_records",
+        "-patient.access_logs",
+        "-healthcare_worker.user",
+        "-healthcare_worker.access_logs",
+        "-healthcare_worker.healthcare_facility",
+    )
 
 
 class Patient(db.Model, SerializerMixin):
@@ -69,7 +78,16 @@ class Patient(db.Model, SerializerMixin):
     access_logs = db.relationship("AccessLog", back_populates="patient")
     consent_records = db.relationship("ConsentRecord", back_populates="patient")
 
-    serialize_rules = ("-consent_records.patient", "-access_logs.patient", "-user.patient")
+    serialize_rules = (
+        "-user.patient",
+        "-user.healthcare_worker",
+        "-access_logs.patient",
+        "-access_logs.healthcare_worker.user",
+        "-access_logs.healthcare_worker.healthcare_facility",
+        "-consent_records.patient",
+        "-consent_records.facility.healthcare_workers",
+        "-consent_records.facility.consent_records",
+    )
 
 
 class HealthCareFacility(db.Model, SerializerMixin):
@@ -85,7 +103,15 @@ class HealthCareFacility(db.Model, SerializerMixin):
     healthcare_workers = db.relationship("HealthCareWorker", back_populates="healthcare_facility")
     consent_records = db.relationship("ConsentRecord", back_populates="facility")
 
-    serialize_rules = ("-healthcare_workers.healthcare_facility", "-consent_records.facility")
+    serialize_rules = (
+        "-healthcare_workers.healthcare_facility",
+        "-healthcare_workers.user",
+        "-healthcare_workers.access_logs",
+        "-consent_records.facility",
+        "-consent_records.patient.user",
+        "-consent_records.patient.access_logs",
+        "-consent_records.patient.consent_records",
+    )
 
 
 class HealthCareWorker(db.Model, SerializerMixin):
@@ -102,6 +128,17 @@ class HealthCareWorker(db.Model, SerializerMixin):
     healthcare_facility = db.relationship("HealthCareFacility", back_populates="healthcare_workers", uselist=False)
     user = db.relationship("User", back_populates="healthcare_worker", uselist=False)
     access_logs = db.relationship("AccessLog", back_populates="healthcare_worker")
+
+    serialize_rules = (
+        "-user.healthcare_worker",
+        "-user.patient",
+        "-healthcare_facility.healthcare_workers",
+        "-healthcare_facility.consent_records",
+        "-access_logs.healthcare_worker",
+        "-access_logs.patient.user",
+        "-access_logs.patient.access_logs",
+        "-access_logs.patient.consent_records",
+    )
 
 
 class ConsentRecord(db.Model, SerializerMixin):
@@ -121,7 +158,16 @@ class ConsentRecord(db.Model, SerializerMixin):
     facility = db.relationship("HealthCareFacility", back_populates="consent_records", uselist=False)
     patient = db.relationship("Patient", back_populates="consent_records", uselist=False)
 
-    serialize_rules = ("-facility.consent_records", "-patient.consent_records")    
+    serialize_rules = (
+        "-patient.consent_records",
+        "-patient.access_logs",
+        "-patient.user.patient",
+        "-patient.user.healthcare_worker",
+        "-facility.consent_records",
+        "-facility.healthcare_workers.healthcare_facility",
+        "-facility.healthcare_workers.user",
+        "-facility.healthcare_workers.access_logs",
+    )
 
 
 class AccessLog(db.Model, SerializerMixin):
@@ -139,3 +185,15 @@ class AccessLog(db.Model, SerializerMixin):
 
     patient = db.relationship("Patient", back_populates="access_logs", uselist=False)
     healthcare_worker = db.relationship("HealthCareWorker", back_populates="access_logs", uselist=False)
+
+    serialize_rules = (
+        "-patient.access_logs",
+        "-patient.consent_records",
+        "-patient.user.patient",
+        "-patient.user.healthcare_worker",
+        "-healthcare_worker.access_logs",
+        "-healthcare_worker.user.healthcare_worker",
+        "-healthcare_worker.user.patient",
+        "-healthcare_worker.healthcare_facility.healthcare_workers",
+        "-healthcare_worker.healthcare_facility.consent_records",
+    )

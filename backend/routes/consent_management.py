@@ -44,10 +44,10 @@ class NewConsent(Resource):
             db.session.add(new_consent)
             db.session.commit()
 
-            return new_consent.to_dict()
+            return new_consent.to_dict(rules=("-facility.healthcare_workers", ))
         
         return {"error": "not found"}, 404
-
+    
 class GetConsents(Resource):
 
     @jwt_required()
@@ -60,7 +60,7 @@ class GetConsents(Resource):
             consents = db.session.query(ConsentRecord).filter_by(granted_by=user_id).all()
 
             response = make_response(
-                [consent_record.to_dict() for consent_record in consents],
+                [consent_record.to_dict(rules=("-facility.healthcare_workers", )) for consent_record in consents],
                 200
             )
 
@@ -81,7 +81,7 @@ class RevokeConsent(Resource):
             consent_record.status = Status.REVOKED
             db.session.commit()
 
-            return make_response(consent_record.to_dict(), 200)
+            return make_response(consent_record.to_dict(rules=("-facility.healthcare_workers", )), 200)
         
         else:
             return make_response({"error": "unauthorized"}, 401)
@@ -100,7 +100,7 @@ class GetConsentByID(Resource):
         if healthcare_worker:
             consent_record = db.session.query(ConsentRecord).filter_by(consent_id=int(consent_id)).first()
             if consent_record and consent_record.facility_id == healthcare_worker.facility_id:
-                response = make_response(consent_record.to_dict())
+                response = make_response({"status": consent_record.to_dict(rules=("-facility.healthcare_workers", ))["status"]})
 
                 return response
             

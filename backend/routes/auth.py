@@ -101,8 +101,8 @@ class LoginRoute(Resource):
                     current_user = user.to_dict(rules=("-healthcare_worker", ))
                     return jsonify(access_token=access_token, refresh_token=refresh_token, user=current_user)
                 case UserRole.HEALTHCARE_WORKER:
-                    current_user = user.to_dict(rules=("-patient", ))
-                    return jsonify(access_token=access_token, refresh_token=refresh_token, user=current_user)
+                    # current_user = user.to_dict(rules=("-patient", ))
+                    return jsonify(access_token=access_token, refresh_token=refresh_token)
         
         else:
             response = make_response({
