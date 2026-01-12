@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
 import { Plus, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import PatientConsents from '../components/PatientConsents'
 import AccessLogList from '../components/AccessLogList'
 
 export default function Patient() {
@@ -16,6 +17,18 @@ export default function Patient() {
     purpose: 'Routine Checkup',
     expires_at: ''
   })
+
+  // Get user from local storage
+  const getUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem('user'));
+    } catch (e) {
+      return null;
+    }
+  };
+  const user = getUser();
+  const userId = user?.user_id || user?.id;
+  const patientId = user?.patient?.patient_id;
 
   useEffect(() => {
     // Fetch facilities
@@ -55,11 +68,7 @@ export default function Patient() {
     setErrorMessage('')
 
     try {
-      const storedUser = localStorage.getItem('user')
-      if (!storedUser) throw new Error('User not found in local storage')
-
-      const user = JSON.parse(storedUser)
-      const patientId = user?.patient?.patient_id
+      if (!user) throw new Error('User not found in local storage')
 
       if (!patientId) throw new Error('Patient ID not found')
 
@@ -119,18 +128,21 @@ export default function Patient() {
         </button>
       </div>
 
-      <p className="text-gray-700">Welcome to your patient portal. Manage your health data access here.</p>
+      <p className="text-gray-700 mb-6">Welcome to your patient portal. Manage your health data access here.</p>
 
-      {/* Access Logs Section */}
-      {(() => {
-        try {
-          const user = JSON.parse(localStorage.getItem('user'));
-          const userId = user?.user_id || user?.id; // Handle different potential structures
-          return userId ? <AccessLogList userId={userId} /> : null;
-        } catch (e) {
-          return null;
-        }
-      })()}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Consents Section */}
+        {patientId ? (
+          <PatientConsents patientId={patientId} />
+        ) : (
+          <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg">
+            Patient profile not active.
+          </div>
+        )}
+
+        {/* Access Logs Section */}
+        {userId && <AccessLogList userId={userId} />}
+      </div>
 
       {/* Dialog Overlay */}
       {isDialogOpen && (

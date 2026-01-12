@@ -79,7 +79,13 @@ class GetConsents(Resource):
         if not user:
             return make_standard_response(False, "not_found", status=404)
 
-        if (user.role == UserRole.PATIENT and str(url_id) == str(user_id)) or user.role == UserRole.ADMIN:
+        if user.role == UserRole.ADMIN:
+            # If admin, fetch by the patient_id passed in URL
+            consents = db.session.query(ConsentRecord).filter_by(patient_id=url_id).all()
+            data = [consent_record.to_dict(rules=("-facility.healthcare_workers", )) for consent_record in consents]
+            return make_standard_response(True, data=data)
+
+        if user.role == UserRole.PATIENT and user.patient and str(url_id) == str(user.patient.patient_id):
             consents = db.session.query(ConsentRecord).filter_by(granted_by=user_id).all()
             data = [consent_record.to_dict(rules=("-facility.healthcare_workers", )) for consent_record in consents]
             return make_standard_response(True, data=data)

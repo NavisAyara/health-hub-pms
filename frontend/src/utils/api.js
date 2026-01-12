@@ -66,12 +66,6 @@ function onRefreshed(token) {
     refreshSubscribers = []
 }
 
-/**
- * Custom fetch wrapper that handles authentication and token refreshing.
- * 
- * @param {string} endpoint - The API endpoint (e.g., '/users/profile')
- * @param {object} options - Fetch options (method, body, etc.)
- */
 export async function api(endpoint, options = {}) {
     const url = `${BASE_URL}${endpoint}`
     const authData = getAuthData()
@@ -129,7 +123,11 @@ export async function api(endpoint, options = {}) {
                 }
 
                 const refreshBody = await refreshResponse.json()
-                const newAccessToken = refreshBody.access_token
+                const newAccessToken = refreshBody.access_token || refreshBody.data?.access_token
+
+                if (!newAccessToken) {
+                    throw new Error('No access token received')
+                }
 
                 // If backend returns a new refresh token, we should update that too.
                 // Assuming backend sends back 'access_token' at minimum.
