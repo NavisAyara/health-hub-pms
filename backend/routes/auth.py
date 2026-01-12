@@ -41,7 +41,8 @@ class RegisterSchema(BaseModel):
     facility_name: Optional[str] = None
     license_number: Optional[str] = None
     job_title: Optional[str] = None
-    @root_validator
+
+    @root_validator(skip_on_failure=True)
     def check_role_fields(cls, values):
         role = values.get('role')
         if role == 'PATIENT' and not values.get('national_id'):
@@ -158,7 +159,11 @@ class LoginRoute(Resource):
                 current_user = user.to_dict(rules=("-healthcare_worker", ))
                 return standardized_response(True, data={"access_token": access_token, "refresh_token": refresh_token, "user": current_user})
             elif user.role == UserRole.HEALTHCARE_WORKER:
-                return standardized_response(True, data={"access_token": access_token, "refresh_token": refresh_token})
+                current_user = user.to_dict(rules=("-patient", ))
+                return standardized_response(True, data={"access_token": access_token, "refresh_token": refresh_token, "user": current_user})
+            else:
+                current_user = user.to_dict(rules=("-healthcare_worker", "-patient"))
+                return standardized_response(True, data={"access_token": access_token, "refresh_token": refresh_token, "user": current_user})
 
         return standardized_response(False, "invalid_credentials", status=401)
     

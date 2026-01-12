@@ -5,8 +5,6 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 load_dotenv()
 
-from utils import decrypt_id
-
 import os
 from functools import wraps
 
@@ -14,13 +12,13 @@ from data import db, PatientRegistryRecord
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+db.init_app(app)
 
 CORS(app)
 
-db.init_app(app)
-
 Migrate(app, db)
 
+# custom decorator for API Key auth
 def api_key_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
@@ -42,8 +40,6 @@ def patient_data():
     received_id = request.args.get("national_id")
 
     patient = db.session.query(PatientRegistryRecord).filter_by(national_id=received_id).first()
-    
-
     if patient:
         response = make_response(
             patient.to_dict()
