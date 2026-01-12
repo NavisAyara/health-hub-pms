@@ -1,12 +1,29 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 
 export default function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const isAuthRoute = location.pathname === '/' || location.pathname === '/signup'
 
+  useEffect(() => {
+    if (!isAuthRoute) {
+      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+      if (!token) {
+        navigate('/')
+      }
+    }
+  }, [isAuthRoute, navigate])
+
   function handleLogout() {
-    // TODO: clear auth state / tokens
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('user')
+
+    sessionStorage.removeItem('access_token')
+    sessionStorage.removeItem('refresh_token')
+    sessionStorage.removeItem('user')
+
     navigate('/')
   }
 

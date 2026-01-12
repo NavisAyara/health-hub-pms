@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
@@ -30,10 +31,11 @@ export default function Login() {
 
       const { access_token, refresh_token, user } = body.data
 
-      // Store tokens in localStorage
-      localStorage.setItem('access_token', access_token)
-      localStorage.setItem('refresh_token', refresh_token)
-      localStorage.setItem('user', JSON.stringify(user))
+      // Store tokens based on remember me preference
+      const storage = rememberMe ? localStorage : sessionStorage
+      storage.setItem('access_token', access_token)
+      storage.setItem('refresh_token', refresh_token)
+      storage.setItem('user', JSON.stringify(user))
 
       // Redirect based on role
       const role = user?.role
@@ -77,6 +79,19 @@ export default function Login() {
             className="mt-1 block w-full rounded border-gray-200 focus:border-yellow-400 focus:ring-yellow-200"
           />
         </label>
+
+        <div className="flex items-center mb-4">
+          <input
+            id="remember-me"
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
+          />
+          <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+            Remember me
+          </label>
+        </div>
 
         <div className="flex items-center justify-between">
           <button
