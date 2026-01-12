@@ -5,6 +5,7 @@ from flask import Flask
 from flask_restful import Api
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,6 +27,7 @@ app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=7)
 db.init_app(app)
 
 Migrate(app, db)
+CORS(app)
 
 api = Api(app)
 
