@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from database import db
-from routes import LoginRoute, RegisterRoute
+from routes import LoginRoute, RegisterRoute, RefreshRoute
 from routes import NewConsent, GetConsents, RevokeConsent, GetConsentByID
 
 app = Flask(__name__)
@@ -35,6 +35,7 @@ jwt = JWTManager(app)
 
 api.add_resource(LoginRoute, "/login")
 api.add_resource(RegisterRoute, "/register")
+api.add_resource(RefreshRoute, "/auth/token-refresh")
 
 api.add_resource(NewConsent, "/api/consents")
 api.add_resource(GetConsents, "/api/consents/patient/<url_id>")
