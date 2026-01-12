@@ -13,6 +13,6 @@ class PatientRegistryRecord(db.Model, SerializerMixin):
     date_of_birth = db.Column(db.Date)
     gender = db.Column(db.Enum("MALE", "FEMALE"), nullable=False)
     phone = db.Column(db.String(12))
-    email = db.Column(db.String(20))
-    address = db.Column(db.String(60))
+    email = db.Column(db.Text)
+    address = db.Column(db.Text)
     emergency_contact = db.Column(db.String(20))
