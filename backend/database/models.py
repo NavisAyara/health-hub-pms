@@ -75,7 +75,7 @@ class Patient(db.Model, SerializerMixin):
 class HealthCareFacility(db.Model, SerializerMixin):
     __tablename__ = "healthcare_facilities"
 
-    facility_id = db.Column(db.Integer, primary_key=True)
+    facility_id = db.Column(db.String(20), primary_key=True)
     name = db.Column(db.String(20), unique=True)
     facility_type = db.Column(db.Enum(FacilityType), default=FacilityType.HOSPITAL)
     license_number = db.Column(db.String(20), unique=True)
@@ -97,7 +97,7 @@ class HealthCareWorker(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"))
-    facility_id = db.Column(db.Integer, db.ForeignKey("healthcare_facilities.facility_id"))
+    facility_id = db.Column(db.String(20), db.ForeignKey("healthcare_facilities.facility_id"))
 
     healthcare_facility = db.relationship("HealthCareFacility", back_populates="healthcare_workers", uselist=False)
     user = db.relationship("User", back_populates="healthcare_worker", uselist=False)
@@ -115,7 +115,7 @@ class ConsentRecord(db.Model, SerializerMixin):
     status = db.Column(db.Enum(Status), default=Status.ACTIVE)
 
     patient_id = db.Column(db.String(20), db.ForeignKey("patients.patient_id"))
-    facility_id = db.Column(db.Integer, db.ForeignKey("healthcare_facilities.facility_id"))
+    facility_id = db.Column(db.String(20), db.ForeignKey("healthcare_facilities.facility_id"))
     granted_by = db.Column(db.Integer, db.ForeignKey("users.user_id"))
 
     facility = db.relationship("HealthCareFacility", back_populates="consent_records", uselist=False)
