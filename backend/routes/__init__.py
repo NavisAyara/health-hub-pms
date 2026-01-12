@@ -1,2 +1,2 @@
 from .auth import RegisterRoute, LoginRoute, RefreshRoute
-from .consent_management import NewConsent, GetConsents, GetConsentByID
+from .consent_management import NewConsent, GetConsents, RevokeConsent, GetConsentByID

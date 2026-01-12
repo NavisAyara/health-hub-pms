@@ -11,7 +11,7 @@ load_dotenv()
 
 from database import db
 from routes import LoginRoute, RegisterRoute
-from routes import NewConsent, GetConsents, GetConsentByID
+from routes import NewConsent, GetConsents, RevokeConsent, GetConsentByID
 
 app = Flask(__name__)
 
@@ -34,7 +34,8 @@ api.add_resource(RegisterRoute, "/register")
 
 api.add_resource(NewConsent, "/api/consents")
 api.add_resource(GetConsents, "/api/consents/patient/<url_id>")
-api.add_resource(GetConsentByID, "/api/consents/<consent_id>/revoke")
+api.add_resource(RevokeConsent, "/api/consents/<consent_id>/revoke")
+api.add_resource(GetConsentByID, "/api/consents/check")
 
 
 @app.errorhandler(404)

@@ -25,14 +25,6 @@ class RegisterRoute(Resource):
         national_id_encrypted = encrypt_id(national_id)
         password_hash = bcrypt.generate_password_hash(password, rounds=10)
 
-        patient_id_response = requests.get(
-            url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id_encrypted}",
-            headers={
-                "X-API-Key": os.getenv("REGISTRY_API_KEY")
-            })
-        print(patient_id_response.json())
-        patient_id = patient_id_response.json()["patient_id"]
-
         if role != "ADMIN":
             new_user = User(
                 email=request.json.get("email"),
@@ -44,6 +36,13 @@ class RegisterRoute(Resource):
             db.session.commit()
 
             if role == "PATIENT":
+                patient_id_response = requests.get(
+                    url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id_encrypted}",
+                    headers={
+                        "X-API-Key": os.getenv("REGISTRY_API_KEY")
+                    })
+                print(patient_id_response.json())
+                patient_id = patient_id_response.json()["patient_id"]
                 new_patient = Patient(
                     national_id_encrypted=national_id_encrypted,
                     user_id=new_user.user_id,

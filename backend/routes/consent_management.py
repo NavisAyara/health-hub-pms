@@ -4,7 +4,7 @@ from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import request, make_response
 
-from database import ConsentRecord, Patient, HealthCareFacility, User
+from database import ConsentRecord, Patient, HealthCareFacility, User, HealthCareWorker
 from database import UserRole, Status
 from database import db
 
@@ -70,7 +70,7 @@ class GetConsents(Resource):
             return make_response({"error": "unauthorized"}, 401)
         
 
-class GetConsentByID(Resource):
+class RevokeConsent(Resource):        
 
     @jwt_required()
     def patch(self, consent_id):
@@ -86,3 +86,24 @@ class GetConsentByID(Resource):
         else:
             return make_response({"error": "unauthorized"}, 401)
 
+
+class GetConsentByID(Resource):
+
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+
+        consent_id = request.args.get("consent_id")
+
+        healthcare_worker = db.session.query(HealthCareWorker).filter_by(user_id=user_id).first()
+
+        if healthcare_worker:
+            consent_record = db.session.query(ConsentRecord).filter_by(consent_id=int(consent_id)).first()
+            if consent_record and consent_record.facility_id == healthcare_worker.facility_id:
+                response = make_response(consent_record.to_dict())
+
+                return response
+            
+            return make_response({"data": "not found"}, 404)
+        
+        return make_response({"error": "unauthorized"}, 401)
