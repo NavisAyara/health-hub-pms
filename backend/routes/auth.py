@@ -10,7 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import logging
+import re
 from sqlalchemy.exc import SQLAlchemyError
+from typing import Optional, Literal
+from pydantic import BaseModel, EmailStr, ValidationError, root_validator, Field
 
 logger = logging.getLogger(__name__)
 
@@ -29,19 +32,51 @@ def standardized_response(success: bool, message: str = None, data=None, status:
         payload["data"] = data
     return make_response(jsonify(payload), status)
 
+
+class RegisterSchema(BaseModel):
+    role: Literal['PATIENT','HEALTHCARE_WORKER','ADMIN']
+    email: "EmailStr"
+    password: str = Field(..., min_length=8)
+    national_id: Optional[str] = None
+    facility_name: Optional[str] = None
+    license_number: Optional[str] = None
+    job_title: Optional[str] = None
+    @root_validator
+    def check_role_fields(cls, values):
+        role = values.get('role')
+        if role == 'PATIENT' and not values.get('national_id'):
+            raise ValueError('national_id_required_for_patient')
+        if role == 'HEALTHCARE_WORKER' and not values.get('facility_name'):
+            raise ValueError('facility_name_required_for_healthcare_worker')
+        return values
+class LoginSchema(BaseModel):
+    email: "EmailStr"
+    password: str = Field(..., min_length=1)
+
 class RegisterRoute(Resource):
     def post(self):
-        role = request.json.get("role")
-        password = request.json.get("password")
-        national_id = request.json.get("national_id")
-        national_id_encrypted = encrypt_id(national_id)
+        try:
+            payload = RegisterSchema(**(request.get_json() or {}))
+        except ValidationError as e:
+            return standardized_response(False, "validation_error", data=e.errors(), status=400)
+
+        role = payload.role
+        email = payload.email
+        password = payload.password
+        national_id = payload.national_id
+        national_id_encrypted = encrypt_id(national_id) if national_id else None
         password_hash = bcrypt.generate_password_hash(password, rounds=10)
+
+        # check for duplicate email
+        existing_user = db.session.query(User).filter_by(email=email).first()
+        if existing_user:
+            return standardized_response(False, "email_already_registered", status=409)
 
         if role == "ADMIN":
             return standardized_response(False, "admin_creation_restricted", status=401)
 
         new_user = User(
-            email=request.json.get("email"),
+            email=email,
             password_hash=password_hash.decode("utf-8"),
             role=role
         )
@@ -67,11 +102,11 @@ class RegisterRoute(Resource):
             db.session.add(new_patient)
 
         elif role == "HEALTHCARE_WORKER":
-            facility = db.session.query(HealthCareFacility).filter_by(name=request.json.get("facility_name")).first()
+            facility = db.session.query(HealthCareFacility).filter_by(name=payload.facility_name).first()
             if facility:
                 new_healthcare_worker = HealthCareWorker(
-                    license_number=request.json.get("license_number"),
-                    job_title=request.json.get("job_title"),
+                    license_number=payload.license_number,
+                    job_title=payload.job_title,
                     user_id=new_user.user_id,
                     facility_id=facility.facility_id,
                 )
@@ -98,8 +133,13 @@ class RegisterRoute(Resource):
 
 class LoginRoute(Resource):
     def post(self):
-        email = request.json.get("email", None)
-        password = request.json.get("password", None)
+        try:
+            payload = LoginSchema(**(request.get_json() or {}))
+        except ValidationError as e:
+            return standardized_response(False, "validation_error", data=e.errors(), status=400)
+
+        email = payload.email
+        password = payload.password
 
         user = db.session.query(User).filter_by(email=email).first()
 
