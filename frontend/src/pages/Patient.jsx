@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
 import { Plus, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import AccessLogList from '../components/AccessLogList'
 
 export default function Patient() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -119,6 +120,17 @@ export default function Patient() {
       </div>
 
       <p className="text-gray-700">Welcome to your patient portal. Manage your health data access here.</p>
+
+      {/* Access Logs Section */}
+      {(() => {
+        try {
+          const user = JSON.parse(localStorage.getItem('user'));
+          const userId = user?.user_id || user?.id; // Handle different potential structures
+          return userId ? <AccessLogList userId={userId} /> : null;
+        } catch (e) {
+          return null;
+        }
+      })()}
 
       {/* Dialog Overlay */}
       {isDialogOpen && (
