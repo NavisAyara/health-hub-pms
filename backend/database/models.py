@@ -71,6 +71,8 @@ class Patient(db.Model, SerializerMixin):
     last_name = db.Column(db.String(18))
     date_of_birth = db.Column(db.Date)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+    emergency_contact = db.Column(db.Text)
+    address = db.Column(db.Text)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"))
     

@@ -49,11 +49,11 @@ def seed_main_backend():
         ]
         
         patient_users = [
-            User(email="patient@test.com", password_hash=pw_hash, role=UserRole.PATIENT),  # Sarah - index 0
-            User(email="sam@test.com", password_hash=pw_hash, role=UserRole.PATIENT),      # Samuel - index 1
-            User(email="musa@test.com", password_hash=pw_hash, role=UserRole.PATIENT),     # Musa - index 2
-            User(email="faith@test.com", password_hash=pw_hash, role=UserRole.PATIENT),    # Faith - index 3
-            User(email="david@test.com", password_hash=pw_hash, role=UserRole.PATIENT),    # David - index 4
+            User(email="patient@test.com", password_hash=pw_hash, role=UserRole.PATIENT),
+            User(email="sam@test.com", password_hash=pw_hash, role=UserRole.PATIENT),      
+            User(email="musa@test.com", password_hash=pw_hash, role=UserRole.PATIENT),     
+            User(email="faith@test.com", password_hash=pw_hash, role=UserRole.PATIENT),    
+            User(email="david@test.com", password_hash=pw_hash, role=UserRole.PATIENT),    
         ]
 
         worker_users = [

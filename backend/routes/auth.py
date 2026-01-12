@@ -41,7 +41,6 @@ class RegisterRoute(Resource):
                     headers={
                         "X-API-Key": os.getenv("REGISTRY_API_KEY")
                     })
-                print(patient_id_response.json())
                 patient_id = patient_id_response.json()["patient_id"]
                 new_patient = Patient(
                     national_id_encrypted=national_id_encrypted,
