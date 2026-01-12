@@ -21,7 +21,7 @@ from database import UserRole
 
 bcrypt = Bcrypt()
 
-def make_standard_response(success: bool, message: str = None, data=None, status: int = 200):
+def standardized_response(success: bool, message: str = None, data=None, status: int = 200):
     payload = {"success": success}
     if message:
         payload["message"] = message
@@ -38,7 +38,7 @@ class RegisterRoute(Resource):
         password_hash = bcrypt.generate_password_hash(password, rounds=10)
 
         if role == "ADMIN":
-            return make_standard_response(False, "admin_creation_restricted", status=401)
+            return standardized_response(False, "admin_creation_restricted", status=401)
 
         new_user = User(
             email=request.json.get("email"),
@@ -79,22 +79,22 @@ class RegisterRoute(Resource):
                 db.session.add(new_healthcare_worker)
             else:
                 db.session.rollback()
-                return make_standard_response(False, "facility_not_found", status=404)
+                return standardized_response(False, "facility_not_found", status=404)
         else:
             db.session.rollback()
-            return make_standard_response(False, "user_role_does_not_exist", status=400)
+            return standardized_response(False, "user_role_does_not_exist", status=400)
 
         try:
             db.session.commit()
         except SQLAlchemyError:
             db.session.rollback()
             logger.exception("Database transaction failed while creating user")
-            return make_standard_response(False, "database_transaction_failed", status=500)
+            return standardized_response(False, "database_transaction_failed", status=500)
 
         if role == "PATIENT":
-            return make_standard_response(True, data=new_user.to_dict(rules=("-healthcare_worker", )), status=201)
+            return standardized_response(True, data=new_user.to_dict(rules=("-healthcare_worker", )), status=201)
         elif role == "HEALTHCARE_WORKER":
-            return make_standard_response(True, data=new_user.to_dict(rules=("-patient", )), status=201)
+            return standardized_response(True, data=new_user.to_dict(rules=("-patient", )), status=201)
 
 class LoginRoute(Resource):
     def post(self):
@@ -112,15 +112,15 @@ class LoginRoute(Resource):
             except SQLAlchemyError:
                 db.session.rollback()
                 logger.exception("Database transaction failed while updating last_login")
-                return make_standard_response(False, "database_transaction_failed", status=500)
+                return standardized_response(False, "database_transaction_failed", status=500)
 
             if user.role == UserRole.PATIENT:
                 current_user = user.to_dict(rules=("-healthcare_worker", ))
-                return make_standard_response(True, data={"access_token": access_token, "refresh_token": refresh_token, "user": current_user})
+                return standardized_response(True, data={"access_token": access_token, "refresh_token": refresh_token, "user": current_user})
             elif user.role == UserRole.HEALTHCARE_WORKER:
-                return make_standard_response(True, data={"access_token": access_token, "refresh_token": refresh_token})
+                return standardized_response(True, data={"access_token": access_token, "refresh_token": refresh_token})
 
-        return make_standard_response(False, "invalid_credentials", status=401)
+        return standardized_response(False, "invalid_credentials", status=401)
     
 class RefreshRoute(Resource):
     method_decorators = [jwt_required(refresh=True)]
@@ -128,4 +128,4 @@ class RefreshRoute(Resource):
     def post(self):
         identity = get_jwt_identity()
         access_token = create_access_token(identity=identity)
-        return make_standard_response(True, data={"access_token": access_token})
+        return standardized_response(True, data={"access_token": access_token})
