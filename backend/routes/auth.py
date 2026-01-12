@@ -4,11 +4,15 @@ from flask_jwt_extended import create_access_token, create_refresh_token, jwt_re
 from flask_jwt_extended import get_jwt_identity
 from flask_bcrypt import Bcrypt
 import requests
-import json
 import os
 
 from dotenv import load_dotenv
 load_dotenv()
+
+import logging
+from sqlalchemy.exc import SQLAlchemyError
+
+logger = logging.getLogger(__name__)
 
 from utils import encrypt_id
 
@@ -16,6 +20,14 @@ from database import User, Patient, HealthCareWorker, HealthCareFacility, db
 from database import UserRole
 
 bcrypt = Bcrypt()
+
+def make_standard_response(success: bool, message: str = None, data=None, status: int = 200):
+    payload = {"success": success}
+    if message:
+        payload["message"] = message
+    if data is not None:
+        payload["data"] = data
+    return make_response(jsonify(payload), status)
 
 class RegisterRoute(Resource):
     def post(self):
@@ -25,63 +37,64 @@ class RegisterRoute(Resource):
         national_id_encrypted = encrypt_id(national_id)
         password_hash = bcrypt.generate_password_hash(password, rounds=10)
 
-        if role != "ADMIN":
-            new_user = User(
-                email=request.json.get("email"),
-                password_hash=password_hash.decode("utf-8"),
-                role=role
+        if role == "ADMIN":
+            return make_standard_response(False, "admin_creation_restricted", status=401)
+
+        new_user = User(
+            email=request.json.get("email"),
+            password_hash=password_hash.decode("utf-8"),
+            role=role
+        )
+
+        db.session.add(new_user)
+        # flush so we can use new_user.user_id without committing yet
+        db.session.flush()
+
+        if role == "PATIENT":
+            # query the central registry to get the patient ID
+            patient_id_response = requests.get(
+                url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id_encrypted}",
+                headers={
+                    "X-API-Key": os.getenv("REGISTRY_API_KEY")
+                })
+            patient_id = patient_id_response.json().get("patient_id")
+            new_patient = Patient(
+                national_id_encrypted=national_id_encrypted,
+                user_id=new_user.user_id,
+                patient_id=patient_id
             )
 
-            db.session.add(new_user)
-            db.session.commit()
+            db.session.add(new_patient)
 
-            if role == "PATIENT":
-                patient_id_response = requests.get(
-                    url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id_encrypted}",
-                    headers={
-                        "X-API-Key": os.getenv("REGISTRY_API_KEY")
-                    })
-                patient_id = patient_id_response.json()["patient_id"]
-                new_patient = Patient(
-                    national_id_encrypted=national_id_encrypted,
+        elif role == "HEALTHCARE_WORKER":
+            facility = db.session.query(HealthCareFacility).filter_by(name=request.json.get("facility_name")).first()
+            if facility:
+                new_healthcare_worker = HealthCareWorker(
+                    license_number=request.json.get("license_number"),
+                    job_title=request.json.get("job_title"),
                     user_id=new_user.user_id,
-                    patient_id=patient_id
+                    facility_id=facility.facility_id,
                 )
 
-                db.session.add(new_patient)
-
-            elif role == "HEALTHCARE_WORKER":
-                facility = db.session.query(HealthCareFacility).filter_by(name=request.json.get("facility_name")).first()
-                if facility:
-                    new_healthcare_worker = HealthCareWorker(
-                        license_number=request.json.get("license_number"),
-                        job_title=request.json.get("job_title"),
-                        user_id=new_user.user_id,
-                        facility_id=facility.facility_id,
-                    )
-
-                    db.session.add(new_healthcare_worker)
-            
+                db.session.add(new_healthcare_worker)
             else:
-                response = make_response({"msg": "user role does not exist"})
-                return response
-            
+                db.session.rollback()
+                return make_standard_response(False, "facility_not_found", status=404)
+        else:
+            db.session.rollback()
+            return make_standard_response(False, "user_role_does_not_exist", status=400)
+
+        try:
             db.session.commit()
-            match role:
-                case "PATIENT":
-                    response = make_response(new_user.to_dict(rules=("-healthcare_worker", )), 201)
-                case "HEALTHCARE_WORKER":
-                    response = make_response(new_user.to_dict(rules=("-patient", )), 201)
-            
-            return response
+        except SQLAlchemyError:
+            db.session.rollback()
+            logger.exception("Database transaction failed while creating user")
+            return make_standard_response(False, "database_transaction_failed", status=500)
 
-        elif role == "ADMIN":
-            response = make_response(
-                {"msg": "contact an active admin for admin account creation"},
-                401
-            )
-
-            return response
+        if role == "PATIENT":
+            return make_standard_response(True, data=new_user.to_dict(rules=("-healthcare_worker", )), status=201)
+        elif role == "HEALTHCARE_WORKER":
+            return make_standard_response(True, data=new_user.to_dict(rules=("-patient", )), status=201)
 
 class LoginRoute(Resource):
     def post(self):
@@ -94,21 +107,20 @@ class LoginRoute(Resource):
             access_token = create_access_token(identity=str(user.user_id))
             refresh_token = create_refresh_token(identity=str(user.user_id))
             user.last_login = db.func.now()
-            db.session.commit()
-            match user.role:
-                case UserRole.PATIENT:
-                    current_user = user.to_dict(rules=("-healthcare_worker", ))
-                    return jsonify(access_token=access_token, refresh_token=refresh_token, user=current_user)
-                case UserRole.HEALTHCARE_WORKER:
-                    # current_user = user.to_dict(rules=("-patient", ))
-                    return jsonify(access_token=access_token, refresh_token=refresh_token)
-        
-        else:
-            response = make_response({
-                "user": "not_found"
-            }, 404)
+            try:
+                db.session.commit()
+            except SQLAlchemyError:
+                db.session.rollback()
+                logger.exception("Database transaction failed while updating last_login")
+                return make_standard_response(False, "database_transaction_failed", status=500)
 
-            return response
+            if user.role == UserRole.PATIENT:
+                current_user = user.to_dict(rules=("-healthcare_worker", ))
+                return make_standard_response(True, data={"access_token": access_token, "refresh_token": refresh_token, "user": current_user})
+            elif user.role == UserRole.HEALTHCARE_WORKER:
+                return make_standard_response(True, data={"access_token": access_token, "refresh_token": refresh_token})
+
+        return make_standard_response(False, "invalid_credentials", status=401)
     
 class RefreshRoute(Resource):
     method_decorators = [jwt_required(refresh=True)]
@@ -116,4 +128,4 @@ class RefreshRoute(Resource):
     def post(self):
         identity = get_jwt_identity()
         access_token = create_access_token(identity=identity)
-        return jsonify(access_token=access_token)
+        return make_standard_response(True, data={"access_token": access_token})
