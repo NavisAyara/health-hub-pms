@@ -41,7 +41,7 @@ def api_key_required(f):
 def patient_data():
     received_id = request.args.get("national_id")
 
-    patient = db.session.query(PatientRegistryRecord).filter_by(national_id=decrypt_id(received_id)).first()
+    patient = db.session.query(PatientRegistryRecord).filter_by(national_id=received_id).first()
     
 
     if patient:
