@@ -8,16 +8,11 @@ import requests, os
 import logging
 from sqlalchemy.exc import SQLAlchemyError
 
-logger = logging.getLogger(__name__) 
-import random
-import secrets
+logger = logging.getLogger(__name__)
 
 from database import ConsentRecord, Patient, HealthCareFacility, User, HealthCareWorker, AccessLog
 from database import UserRole, Status, EventAction, ConsentType
 from database import db
-
-from utils import decrypt_id
-
 
 def make_standard_response(success: bool, message: str = None, data=None, status: int = 200):
     payload = {"success": success}
