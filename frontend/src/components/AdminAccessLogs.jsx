@@ -114,7 +114,7 @@ export default function AdminAccessLogs() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                            <Shield className="text-purple-600" size={20} />
+                            <Shield className="text-yellow-600" size={20} />
                             System Access Logs
                         </h2>
                         <p className="text-sm text-gray-500">Monitor all data access attempts across the platform.</p>
@@ -123,7 +123,7 @@ export default function AdminAccessLogs() {
                         <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
                             <Download size={16} /> Export
                         </button>
-                        <button onClick={fetchLogs} className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition shadow-sm">
+                        <button onClick={fetchLogs} className="flex items-center gap-2 px-3 py-1.5 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 transition shadow-sm">
                             <RefreshCw size={16} /> Refresh
                         </button>
                     </div>
@@ -138,7 +138,7 @@ export default function AdminAccessLogs() {
                             placeholder="Search by patient, worker, or facility..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm"
                         />
                     </div>
 
@@ -149,8 +149,8 @@ export default function AdminAccessLogs() {
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${timeRange === range
-                                        ? 'bg-purple-100 text-purple-700 shadow-sm'
-                                        : 'text-gray-600 hover:bg-gray-100'
+                                    ? 'bg-yellow-100 text-yellow-700 shadow-sm'
+                                    : 'text-gray-600 hover:bg-gray-100'
                                     }`}
                             >
                                 {range === '24h' ? '24H' : range === '7days' ? '7 Days' : range === '30days' ? '30 Days' : 'All'}
@@ -245,7 +245,7 @@ export default function AdminAccessLogs() {
                 {filteredLogs.length > INITIAL_LIMIT && (
                     <button
                         onClick={() => setExpanded(!expanded)}
-                        className="text-purple-600 hover:text-purple-800 font-medium hover:underline transition"
+                        className="text-yellow-600 hover:text-yellow-800 font-medium hover:underline transition"
                     >
                         {expanded ? 'Show Less' : `Show All (${filteredLogs.length})`}
                     </button>

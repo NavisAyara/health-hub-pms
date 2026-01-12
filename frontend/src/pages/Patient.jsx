@@ -250,7 +250,7 @@ export default function Patient() {
                     <button
                       type="submit"
                       disabled={status === 'loading'}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-yellow-600 border border-transparent rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-yellow-600 border border-transparent rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed min-w-25"
                     >
                       {status === 'loading' && <Loader2 size={16} className="animate-spin" />}
                       {status === 'loading' ? 'Granting...' : 'Grant Access'}
