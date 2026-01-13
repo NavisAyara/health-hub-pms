@@ -27,12 +27,22 @@ export default function HealthcareWorker() {
     setError(null)
     setPatientData(null)
 
+    const errorMessages = {
+      'patient_not_found_in_registry': 'We couldn\'t find a patient with that National ID in the registry.',
+      'no_valid_consent_found': 'No active consent record was found for this patient at your facility.',
+      'consent_not_active': 'The patient\'s consent for this facility is currently inactive or has expired.',
+      'not_found': 'The requested record could not be found.',
+      'unauthorized': 'You are not authorized to perform this search.',
+      'database_transaction_failed': 'A temporary system error occurred. Please try again in a few moments.'
+    }
+
     try {
       const res = await api(`/api/consents/check?national_id=${encodeURIComponent(nationalId)}`)
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.message || 'Error occurred while searching')
+        const message = data.message || 'search_failed'
+        throw new Error(errorMessages[message] || errorMessages[data.error] || 'An unexpected error occurred while searching.')
       }
 
       if (data.success && data.data) {
@@ -45,17 +55,11 @@ export default function HealthcareWorker() {
         }
         setPatientData(processedData)
       } else {
-        throw new Error('No patient found or consent not active')
+        throw new Error('Could not retrieve patient data. Please verify the ID and try again.')
       }
     } catch (err) {
       console.error(err)
-      if (err.message.includes('404')) {
-        setError('Patient not found or no valid consent present.')
-      } else if (err.message.includes('403')) {
-        setError('Access denied: Consent is not active.')
-      } else {
-        setError(err.message || 'Failed to search for patient')
-      }
+      setError(err.message || 'Failed to search for patient')
     } finally {
       setLoading(false)
     }
