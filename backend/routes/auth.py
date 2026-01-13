@@ -47,8 +47,13 @@ class RegisterSchema(BaseModel):
         role = values.get('role')
         if role == 'PATIENT' and not values.get('national_id'):
             raise ValueError('national_id_required_for_patient')
-        if role == 'HEALTHCARE_WORKER' and not values.get('facility_name'):
-            raise ValueError('facility_name_required_for_healthcare_worker')
+        if role == 'HEALTHCARE_WORKER':
+            if not values.get('facility_name'):
+                raise ValueError('facility_name_required_for_healthcare_worker')
+            if not values.get('license_number'):
+                raise ValueError('license_number_required_for_healthcare_worker')
+            if not values.get('job_title'):
+                raise ValueError('job_title_required_for_healthcare_worker')
         return values
 class LoginSchema(BaseModel):
     email: "EmailStr"
