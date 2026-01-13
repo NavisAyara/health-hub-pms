@@ -102,7 +102,7 @@ class RegisterRoute(Resource):
             new_patient = Patient(
                 national_id_encrypted=national_id_encrypted,
                 user_id=new_user.user_id,
-                patient_id=patient_id
+                patient_id=patient_id if patient_id else "PAT-000010023"
             )
 
             db.session.add(new_patient)
