@@ -94,7 +94,7 @@ class RegisterRoute(Resource):
         if role == "PATIENT":
             # query the central registry to get the patient ID
             patient_id_response = requests.get(
-                url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id_encrypted}",
+                url=f"{os.getenv('MOCK_REGISTRY_URL', 'http://127.0.0.1:8080')}/api/registry/patients?national_id={national_id_encrypted}",
                 headers={
                     "X-API-Key": os.getenv("REGISTRY_API_KEY")
                 })

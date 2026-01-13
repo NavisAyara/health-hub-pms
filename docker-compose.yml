@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Mock Registry Service
+  mock-registry:
+    build: ./mock-registry
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./mock-registry/instance:/app/instance
+    environment:
+      - AUTHORIZED_API_KEY=5eedb71c3a306223f766abdb6c2cc83e68eb72338cc5a0da8bb62b082b4227fe
+      - CRYPTOGRAPHY_KEY=MsR9a6TF293SVhAzWjESVEY3W3XZvyYTNw67XWjNrjk=
+      - FLASK_APP=main.py
+
+  # Backend API Service
+  backend:
+    build: ./backend
+    restart: always
+    depends_on:
+      - mock-registry
+    ports:
+      - "5000:5000"
+    environment:
+      - MARIADB_URI=mariadb+mariadbconnector://root:id0n'th%40ve1@127.0.0.1:3306/health_hub_pms
+      - JWT_SECRET_KEY=1a9dbc1c735f363c42f6799c7cc5bbaa0b630bb48ff49a0692c08b7f0426d924
+      - FLASK_SECRET_KEY=fabffc464270a07aea67c2d3609ab32cc7029fe1018d1d569edd52f47f2fc0c5
+      - CRYPTOGRAPHY_KEY=MsR9a6TF293SVhAzWjESVEY3W3XZvyYTNw67XWjNrjk=
+      - REGISTRY_API_KEY=5eedb71c3a306223f766abdb6c2cc83e68eb72338cc5a0da8bb62b082b4227fe
+      - MOCK_REGISTRY_URL=http://mock-registry:8080
+      - FLASK_APP=app.py
+
+  # Frontend Nginx Service
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=http://localhost:5000
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mariadb_data:

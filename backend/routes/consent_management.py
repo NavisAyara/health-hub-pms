@@ -143,7 +143,7 @@ class GetConsentByID(Resource):
         elif national_id:
              # 1. Get patient_id from registry
             patient_id_response = requests.get(
-                url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id}",
+                url=f"{os.getenv('MOCK_REGISTRY_URL', 'http://127.0.0.1:8080')}/api/registry/patients?national_id={national_id}",
                 headers={
                     "X-API-Key": os.getenv("REGISTRY_API_KEY")
                 })
@@ -173,7 +173,7 @@ class GetConsentByID(Resource):
              # For simplicity to match existing flow structure:
             if national_id: # We have national_id in args
                 patient_id_response = requests.get(
-                    url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id}",
+                    url=f"{os.getenv('MOCK_REGISTRY_URL', 'http://127.0.0.1:8080')}/api/registry/patients?national_id={national_id}",
                     headers={
                         "X-API-Key": os.getenv("REGISTRY_API_KEY")
                     })

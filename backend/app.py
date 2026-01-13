@@ -27,7 +27,7 @@ app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=7)
 
 db.init_app(app)
 
-Migrate(app, db)
+Migrate(app, db, directory="database/migrations")
 CORS(app)
 
 api = Api(app)
