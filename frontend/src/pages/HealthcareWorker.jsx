@@ -8,6 +8,17 @@ export default function HealthcareWorker() {
   const [error, setError] = useState(null)
   const [patientData, setPatientData] = useState(null)
 
+  // Helper to safely parse JSON strings or return original if not string/JSON
+  const parseJsonField = (field) => {
+    if (!field) return null
+    if (typeof field === 'object') return field
+    try {
+      return JSON.parse(field)
+    } catch (e) {
+      return field
+    }
+  }
+
   const handleSearch = async (e) => {
     e.preventDefault()
     if (!nationalId.trim()) return
@@ -25,7 +36,14 @@ export default function HealthcareWorker() {
       }
 
       if (data.success && data.data) {
-        setPatientData(data.data)
+        const rawData = data.data
+        // Parse nested JSON fields
+        const processedData = {
+          ...rawData,
+          address: parseJsonField(rawData.address),
+          emergency_contact: parseJsonField(rawData.emergency_contact)
+        }
+        setPatientData(processedData)
       } else {
         throw new Error('No patient found or consent not active')
       }
@@ -128,7 +146,28 @@ export default function HealthcareWorker() {
                 <dd className="font-medium text-slate-900 capitalize">{patientData.gender || 'N/A'}</dd>
 
                 <dt className="text-slate-500">Address:</dt>
-                <dd className="font-medium text-slate-900">{patientData.address || 'N/A'}</dd>
+                <dd className="font-medium text-slate-900">
+                  {typeof patientData.address === 'object' && patientData.address !== null ? (
+                    <div className="flex flex-col">
+                      <span>{patientData.address.county}, {patientData.address.sub_county}</span>
+                      <span className="text-slate-500 text-xs">Ward: {patientData.address.ward}</span>
+                    </div>
+                  ) : (
+                    patientData.address || 'N/A'
+                  )}
+                </dd>
+
+                <dt className="text-slate-500">Emergency:</dt>
+                <dd className="font-medium text-slate-900">
+                  {typeof patientData.emergency_contact === 'object' && patientData.emergency_contact !== null ? (
+                    <div className="flex flex-col">
+                      <span>{patientData.emergency_contact.name} ({patientData.emergency_contact.relationship})</span>
+                      <a href={`tel:${patientData.emergency_contact.phone}`} className="text-yellow-600 hover:underline">{patientData.emergency_contact.phone}</a>
+                    </div>
+                  ) : (
+                    patientData.emergency_contact || 'N/A'
+                  )}
+                </dd>
               </dl>
             </div>
 
@@ -139,6 +178,7 @@ export default function HealthcareWorker() {
               </h3>
               {/* Assuming patientData might have some medical info or we just show what we have */}
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 text-sm text-slate-600">
+
                 {/* This would be populated with actual medical records if available in the response */}
                 <p className="italic">Access to medical records granted. <br /> Use specific modules to view details.</p>
               </div>
