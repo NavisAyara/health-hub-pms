@@ -17,7 +17,7 @@ from pydantic import BaseModel, EmailStr, ValidationError, root_validator, Field
 
 logger = logging.getLogger(__name__)
 
-from utils import encrypt_id
+from utils import encrypt_id, decrypt_id
 
 from database import User, Patient, HealthCareWorker, HealthCareFacility, db
 from database import UserRole
@@ -157,6 +157,8 @@ class LoginRoute(Resource):
 
             if user.role == UserRole.PATIENT:
                 current_user = user.to_dict(rules=("-healthcare_worker", ))
+                current_user["national_id"] = decrypt_id(current_user["patient"]["national_id_encrypted"])
+                del current_user["patient"]["national_id_encrypted"]
                 return standardized_response(True, data={"access_token": access_token, "refresh_token": refresh_token, "user": current_user})
             elif user.role == UserRole.HEALTHCARE_WORKER:
                 current_user = user.to_dict(rules=("-patient", ))

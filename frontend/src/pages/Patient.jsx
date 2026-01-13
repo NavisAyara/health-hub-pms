@@ -109,10 +109,13 @@ export default function Patient() {
 
   const closeDialog = () => {
     if (status === 'loading') return
+    const wasSuccess = status === 'success'
     setIsDialogOpen(false)
     setStatus('idle')
     setErrorMessage('')
-    // Reset form defaults if needed, or keep them
+    if (wasSuccess) {
+      window.location.reload()
+    }
   }
 
   return (
