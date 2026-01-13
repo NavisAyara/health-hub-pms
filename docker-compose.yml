@@ -23,7 +23,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - MARIADB_URI=mariadb+mariadbconnector://root:id0n'th%40ve1@127.0.0.1:3306/health_hub_pms
+      - MARIADB_URI=mariadb+mariadbconnector://root:id0n'th%40ve1@host.docker.internal:3306/health_hub_pms
       - JWT_SECRET_KEY=1a9dbc1c735f363c42f6799c7cc5bbaa0b630bb48ff49a0692c08b7f0426d924
       - FLASK_SECRET_KEY=fabffc464270a07aea67c2d3609ab32cc7029fe1018d1d569edd52f47f2fc0c5
       - CRYPTOGRAPHY_KEY=MsR9a6TF293SVhAzWjESVEY3W3XZvyYTNw67XWjNrjk=

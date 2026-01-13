@@ -97,6 +97,8 @@ Use the following credentials to log in and test different user roles:
 
 ### Authentication
 - `POST /login` - User login & token generation
+  > **Note**: The current implementation does not get user data on the patient side if "Remember Me" is unset
+
 - `POST /register` - User registration
 
   >  **Note**: The current implementation does not retreive user information if not already in the central registry. Future improvements will allow users to register and login using their national ID.
