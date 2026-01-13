@@ -219,3 +219,31 @@ class GetConsentByID(Resource):
             return make_standard_response(True, data=patient_response)
 
         return make_standard_response(False, "consent_not_active", status=403)
+
+
+class GetFacilityConsents(Resource):
+
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+
+        user = db.session.query(User).filter_by(user_id=int(user_id)).first()
+        if not user or user.role != UserRole.HEALTHCARE_WORKER:
+            return make_standard_response(False, "unauthorized", status=401)
+        
+        healthcare_worker = user.healthcare_worker
+        if not healthcare_worker:
+            return make_standard_response(False, "worker_profile_not_found", status=404)
+
+        consents = db.session.query(ConsentRecord).filter_by(facility_id=healthcare_worker.facility_id).all()
+        
+        # Enhanced serialization to include patient details if available locally
+        data = []
+        for c in consents:
+            c_dict = c.to_dict(rules=("-facility.healthcare_workers", ))
+            # If we want to show patient name, we need to join or fetch. 
+            if c.patient and c.patient.user:
+                 c_dict['patient_name'] = f"{c.patient.first_name} {c.patient.last_name}"
+            data.append(c_dict)
+
+        return make_standard_response(True, data=data)

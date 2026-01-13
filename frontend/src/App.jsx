@@ -5,6 +5,7 @@ import Signup from './pages/Signup'
 import Patient from './pages/Patient'
 import Admin from './pages/Admin'
 import HealthcareWorker from './pages/HealthcareWorker'
+import FacilityConsents from './pages/FacilityConsents'
 import NotFound from './pages/NotFound'
 import RequireAuth from './components/RequireAuth'
 
@@ -27,6 +28,7 @@ function App() {
 
         <Route element={<RequireAuth allowedRoles={['healthcare_worker']} />}>
           <Route path="healthcare-worker" element={<HealthcareWorker />} />
+          <Route path="healthcare-worker/consents" element={<FacilityConsents />} />
         </Route>
 
         {/* 404 - catch all */}

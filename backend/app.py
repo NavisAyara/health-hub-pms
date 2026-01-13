@@ -12,7 +12,7 @@ load_dotenv()
 
 from database import db
 from routes import LoginRoute, RegisterRoute, RefreshRoute
-from routes import NewConsent, GetConsents, RevokeConsent, GetConsentByID
+from routes import NewConsent, GetConsents, RevokeConsent, GetConsentByID, GetFacilityConsents
 from routes import Facilities, PatientAccessLogs, AdminAccessLogs
 
 app = Flask(__name__)
@@ -42,6 +42,7 @@ api.add_resource(NewConsent, "/api/consents")
 api.add_resource(GetConsents, "/api/consents/patient/<url_id>")
 api.add_resource(RevokeConsent, "/api/consents/<consent_id>/revoke")
 api.add_resource(GetConsentByID, "/api/consents/check")
+api.add_resource(GetFacilityConsents, "/api/consents/facility")
 api.add_resource(Facilities, "/facilities")
 api.add_resource(PatientAccessLogs, "/api/access-logs/user/<user_id>")
 api.add_resource(AdminAccessLogs, "/api/admin/access-logs")

@@ -91,6 +91,8 @@ Use the following credentials to log in and test different user roles:
 | **Patient** | `patient@test.com` | `Test123!` |
 | **Doctor** | `doctor@test.com` | `Test123!` |
 
+  > **Note**: The admin can only view access logs. They cannot currently manage users. Future improvements will allow admins to manage users.
+
 ## API Endpoints List
 
 ### Authentication

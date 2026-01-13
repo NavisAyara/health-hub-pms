@@ -45,7 +45,13 @@ export default function Layout() {
       {!isAuthRoute && (
         <>
           <header className="bg-yellow-200 border-b border-yellow-300">
-            <div className="max-w-6xl mx-auto px-4 py-3 flex justify-end">
+            <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+              <nav className="flex gap-4">
+                <a href="/healthcare-worker" className="text-sm font-medium text-yellow-900 hover:text-yellow-700">Dashboard</a>
+                {user?.role === 'healthcare_worker' && (
+                  <a href="/healthcare-worker/consents" className="text-sm font-medium text-yellow-900 hover:text-yellow-700">Consents</a>
+                )}
+              </nav>
               <button
                 onClick={handleLogout}
                 className="text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded"
