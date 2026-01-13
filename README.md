@@ -96,6 +96,9 @@ Use the following credentials to log in and test different user roles:
 ### Authentication
 - `POST /login` - User login & token generation
 - `POST /register` - User registration
+
+  >  **Note**: The current implementation does not retreive user information if not already in the central registry. Future improvements will allow users to register and login using their national ID.
+
 - `POST /auth/token-refresh` - Refresh access token
 
 ### Consents
@@ -103,6 +106,7 @@ Use the following credentials to log in and test different user roles:
 - `GET /api/consents/patient/<url_id>` - Get consents for a specific patient
 - `PATCH /api/consents/<consent_id>/revoke` - Revoke an existing consent
 - `POST /api/consents/check` - Check specific consent validity
+
   > **Note:** The current implementation allows a patient to grant consent more than once, but when searching by National ID, the healthcare worker can only see the first active consent record found. Future improvements will allow selecting from multiple valid consents.
 
 ### Facilities & Logs
