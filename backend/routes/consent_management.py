@@ -126,29 +126,58 @@ class GetConsentByID(Resource):
         national_id = request.args.get("national_id")
 
         healthcare_worker = db.session.query(HealthCareWorker).filter_by(user_id=user_id).first()
-        consent_record = db.session.query(ConsentRecord).filter_by(consent_id=int(consent_id)).first()
-
         if not healthcare_worker:
             return make_standard_response(False, "unauthorized", status=401)
-        if not consent_record:
-            return make_standard_response(False, "not_found", status=404)
+        
+        consent_record = None # The consent record granted BY the patient
 
-        # load consent for the patient linked to this consent_record
-        consent_for_patient = db.session.query(ConsentRecord).filter_by(patient_id=consent_record.patient.patient_id).first()
-        if not consent_for_patient or consent_for_patient.facility_id != healthcare_worker.facility_id:
-            return make_standard_response(False, "not_found", status=404)
-
-        status = consent_for_patient.to_dict(rules=("-facility.healthcare_workers", ))["status"]
-
-        # fetch patient data from registry if consent is active
-        patient_data = None
-        if status == "active":
+        # If consent_id is provided, use the old logic (but slightly improved path)
+        if consent_id: 
+            consent_record_meta = db.session.query(ConsentRecord).filter_by(consent_id=int(consent_id)).first()
+            if not consent_record_meta:
+                 return make_standard_response(False, "not_found", status=404)
+            # load consent for the patient linked to this consent_record
+            consent_record = db.session.query(ConsentRecord).filter_by(patient_id=consent_record_meta.patient.patient_id).first()
+        
+        # If no consent_id, try to find patient via national_id
+        elif national_id:
+             # 1. Get patient_id from registry
             patient_id_response = requests.get(
                 url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id}",
                 headers={
                     "X-API-Key": os.getenv("REGISTRY_API_KEY")
                 })
-            patient_data = patient_id_response.json()
+            
+            if patient_id_response.status_code != 200:
+                 return make_standard_response(False, "patient_not_found_in_registry", status=404)
+            
+            registry_data = patient_id_response.json()
+            patient_id = registry_data.get("patient_id")
+
+            # 2. Find consent for this patient at this facility
+            # LIMITATION: Only picks the first one found.
+            consent_record = db.session.query(ConsentRecord).join(HealthCareFacility).filter(
+                ConsentRecord.patient_id == patient_id,
+                ConsentRecord.facility_id == healthcare_worker.facility_id
+            ).first()
+
+        if not consent_record or consent_record.facility_id != healthcare_worker.facility_id:
+            return make_standard_response(False, "no_valid_consent_found", status=404)
+
+        status = consent_record.to_dict(rules=("-facility.healthcare_workers", ))["status"]
+
+        # fetch patient data from registry if consent is active
+        patient_data = None
+        if status == "active":
+             # Optimization: reuse registry_data if we have it and it matches (optional, but cleaner to re-fetch or use logic)
+             # For simplicity to match existing flow structure:
+            if national_id: # We have national_id in args
+                patient_id_response = requests.get(
+                    url=f"http://127.0.0.1:8080/api/registry/patients?national_id={national_id}",
+                    headers={
+                        "X-API-Key": os.getenv("REGISTRY_API_KEY")
+                    })
+                patient_data = patient_id_response.json()
 
         patient = None
         if patient_data:
@@ -158,9 +187,9 @@ class GetConsentByID(Resource):
                     setattr(patient, k, v)
 
         # determine action from consent type
-        if consent_for_patient.consent_type == ConsentType.VIEW:
+        if consent_record.consent_type == ConsentType.VIEW:
             action = EventAction.VIEW
-        elif consent_for_patient.consent_type == ConsentType.SHARE:
+        elif consent_record.consent_type == ConsentType.SHARE:
             action = EventAction.SHARE
         else:
             action = EventAction.EDIT
@@ -168,7 +197,7 @@ class GetConsentByID(Resource):
         new_log = AccessLog(
             result="ALLOWED" if status == "active" else "DENIED",
             reason="Consent Check",
-            patient_id=consent_for_patient.patient_id,
+            patient_id=consent_record.patient_id,
             accessed_by=healthcare_worker.worker_id,
             ip_address="192.168.1.1",
             action=action

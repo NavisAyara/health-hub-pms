@@ -103,6 +103,7 @@ Use the following credentials to log in and test different user roles:
 - `GET /api/consents/patient/<url_id>` - Get consents for a specific patient
 - `PATCH /api/consents/<consent_id>/revoke` - Revoke an existing consent
 - `POST /api/consents/check` - Check specific consent validity
+  > **Note:** The current implementation allows a patient to grant consent more than once, but when searching by National ID, the healthcare worker can only see the first active consent record found. Future improvements will allow selecting from multiple valid consents.
 
 ### Facilities & Logs
 - `GET /facilities` - List healthcare facilities
