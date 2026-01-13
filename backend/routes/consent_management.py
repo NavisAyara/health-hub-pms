@@ -212,6 +212,10 @@ class GetConsentByID(Resource):
             return make_standard_response(False, "database_transaction_failed", status=500)
 
         if status == "active" and patient:
-            return make_standard_response(True, data=patient.to_dict(rules=("-access_logs", "-consent_records")))
+            patient_response = patient.to_dict(rules=("-access_logs", "-consent_records"))
+            # Append all data from registry to the response so frontend gets everything it needs
+            if patient_data:
+                patient_response.update(patient_data)
+            return make_standard_response(True, data=patient_response)
 
         return make_standard_response(False, "consent_not_active", status=403)
