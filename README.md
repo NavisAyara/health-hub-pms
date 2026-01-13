@@ -115,6 +115,7 @@ Use the following credentials to log in and test different user roles:
 
 ### Facilities & Logs
 - `GET /facilities` - List healthcare facilities
+- `GET /api/consents/facility` - Get all consents for a specific facility
 - `GET /api/access-logs/user/<user_id>` - Get access logs for a user
 - `GET /api/admin/access-logs` - Get all access logs (Admin only)
 
