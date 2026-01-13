@@ -32,6 +32,14 @@ Before starting, ensure you have the following installed:
 
 ## Installation & Setup
 
+### Docker
+
+> **Remember to replace values of the environment variables in docker-compose.yml with your own values**
+
+```bash
+docker compose up --build
+```
+
 ### 1. Clone the Repository
 ```bash
 git clone <repository-url>
