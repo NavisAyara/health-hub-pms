@@ -37,12 +37,14 @@ Before starting, ensure you have the following installed:
 > **Remember to replace values of the environment variables in docker-compose.yml with your own values**
 
 ```bash
+git clone https://github.com/NavisAyara/health-hub-pms.git
+cd health-hub-pms
 docker compose up --build
 ```
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/NavisAyara/health-hub-pms.git
 cd health-hub-pms
 ```
 
