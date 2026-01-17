@@ -1,160 +1,170 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { api } from '../utils/api'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { api } from "../utils/api";
 
 export default function Signup() {
-  const [role, setRole] = useState('PATIENT') // PATIENT or HEALTHCARE_WORKER
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [nationalId, setNationalId] = useState('')
+  const [role, setRole] = useState("PATIENT"); // PATIENT or HEALTHCARE_WORKER
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [nationalId, setNationalId] = useState("");
 
   // Healthcare Worker fields
-  const [licenseNumber, setLicenseNumber] = useState('')
-  const [jobTitle, setJobTitle] = useState('')
-  const [facilityName, setFacilityName] = useState('')
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [facilityName, setFacilityName] = useState("");
 
-  const [facilities, setFacilities] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [facilities, setFacilities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch facilities for the dropdown
     async function fetchFacilities() {
       try {
-        const res = await api('/facilities')
+        const res = await api("/facilities");
         if (res.ok) {
-          const data = await res.json()
-          setFacilities(data)
+          const data = await res.json();
+          setFacilities(data);
         }
       } catch (err) {
-        console.error("Failed to fetch facilities", err)
+        console.error("Failed to fetch facilities", err);
       }
     }
-    fetchFacilities()
-  }, [])
+    fetchFacilities();
+  }, []);
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
     // Basic Validation
     if (!email || !password) {
-      setError("Email and password are required")
-      setLoading(false)
-      return
+      setError("Email and password are required");
+      setLoading(false);
+      return;
     }
 
-    if (role === 'PATIENT' && !nationalId) {
-      setError("National ID is required for patients")
-      setLoading(false)
-      return
+    if (role === "PATIENT" && !nationalId) {
+      setError("National ID is required for patients");
+      setLoading(false);
+      return;
     }
 
-    if (role === 'HEALTHCARE_WORKER') {
+    if (role === "HEALTHCARE_WORKER") {
       if (!licenseNumber || !jobTitle || !facilityName) {
-        setError("All fields are required for healthcare workers")
-        setLoading(false)
-        return
+        setError("All fields are required for healthcare workers");
+        setLoading(false);
+        return;
       }
     }
 
     const payload = {
       email,
       password,
-      role
-    }
+      role,
+    };
 
-    if (role === 'PATIENT') {
-      payload.national_id = nationalId
+    if (role === "PATIENT") {
+      payload.national_id = nationalId;
     } else {
-      payload.license_number = licenseNumber
-      payload.job_title = jobTitle
-      payload.facility_name = facilityName
+      payload.license_number = licenseNumber;
+      payload.job_title = jobTitle;
+      payload.facility_name = facilityName;
     }
 
     try {
-      const res = await api('/register', {
-        method: 'POST',
+      const res = await api("/register", {
+        method: "POST",
         body: JSON.stringify(payload),
-      })
+      });
 
-      const body = await res.json()
+      const body = await res.json();
 
       if (!res.ok || !body.success) {
-        setError(body?.message || 'Registration failed')
-        setLoading(false)
-        return
+        setError(body?.message || "Registration failed");
+        setLoading(false);
+        return;
       }
 
       // Auto Login
       try {
-        const loginRes = await api('/login', {
-          method: 'POST',
+        const loginRes = await api("/login", {
+          method: "POST",
           body: JSON.stringify({ email, password }),
-        })
+        });
 
-        const loginBody = await loginRes.json()
+        const loginBody = await loginRes.json();
 
         if (!loginRes.ok || !loginBody.success) {
-          navigate('/')
-          return
+          navigate("/");
+          return;
         }
 
-        const { access_token, refresh_token, user } = loginBody.data
+        const { access_token, refresh_token, user } = loginBody.data;
 
-        sessionStorage.setItem('access_token', access_token)
-        sessionStorage.setItem('refresh_token', refresh_token)
-        sessionStorage.setItem('user', JSON.stringify(user))
+        sessionStorage.setItem("access_token", access_token);
+        sessionStorage.setItem("refresh_token", refresh_token);
+        sessionStorage.setItem("user", JSON.stringify(user));
 
-        if (user.role === 'admin') navigate('/admin')
-        else if (user.role === 'patient') navigate('/patient')
-        else if (user.role === 'healthcare_worker') navigate('/healthcare-worker')
-        else navigate('/patient')
-
+        if (user.role === "admin") navigate("/admin");
+        else if (user.role === "patient") navigate("/patient");
+        else if (user.role === "healthcare_worker")
+          navigate("/healthcare-worker");
+        else navigate("/patient");
       } catch (loginErr) {
-        console.error("Auto-login failed", loginErr)
-        navigate('/')
+        console.error("Auto-login failed", loginErr);
+        navigate("/");
       }
-
-    } catch (err) {
-      setError('Network error during registration')
+    } catch {
+      setError("Network error during registration");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   return (
     <div className="flex items-center justify-center min-h-[70vh] bg-gray-50/50">
-      <form onSubmit={handleSubmit} className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-gray-100"
+      >
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Create Account</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">
+            Create Account
+          </h1>
           <p className="text-sm text-slate-500">Join Health Hub today</p>
         </div>
 
-        {error && <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">{error}</div>}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
+            {error}
+          </div>
+        )}
 
         {/* Role Toggle */}
         <div className="flex p-1 bg-gray-100 rounded-lg mb-6">
           <button
             type="button"
-            onClick={() => setRole('PATIENT')}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === 'PATIENT'
-              ? 'bg-white text-yellow-700 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-              }`}
+            onClick={() => setRole("PATIENT")}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              role === "PATIENT"
+                ? "bg-white text-yellow-700 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
           >
             Patient
           </button>
           <button
             type="button"
-            onClick={() => setRole('HEALTHCARE_WORKER')}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === 'HEALTHCARE_WORKER'
-              ? 'bg-white text-yellow-700 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-              }`}
+            onClick={() => setRole("HEALTHCARE_WORKER")}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              role === "HEALTHCARE_WORKER"
+                ? "bg-white text-yellow-700 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
           >
             Healthcare Worker
           </button>
@@ -163,7 +173,9 @@ export default function Signup() {
         {/* Common Fields */}
         <div className="space-y-4 mb-6">
           <label className="block">
-            <span className="block text-sm font-medium text-slate-700 mb-1.5">Email Address</span>
+            <span className="block text-sm font-medium text-slate-700 mb-1.5">
+              Email Address
+            </span>
             <input
               type="email"
               value={email}
@@ -175,7 +187,9 @@ export default function Signup() {
           </label>
 
           <label className="block">
-            <span className="block text-sm font-medium text-slate-700 mb-1.5">Password</span>
+            <span className="block text-sm font-medium text-slate-700 mb-1.5">
+              Password
+            </span>
             <input
               type="password"
               value={password}
@@ -189,10 +203,12 @@ export default function Signup() {
         </div>
 
         {/* Patient Specific */}
-        {role === 'PATIENT' && (
+        {role === "PATIENT" && (
           <div className="space-y-4 mb-6 animate-in slide-in-from-top-2 duration-300">
             <label className="block">
-              <span className="block text-sm font-medium text-slate-700 mb-1.5">National ID</span>
+              <span className="block text-sm font-medium text-slate-700 mb-1.5">
+                National ID
+              </span>
               <input
                 type="text"
                 value={nationalId}
@@ -206,10 +222,12 @@ export default function Signup() {
         )}
 
         {/* Healthcare Worker Specific */}
-        {role === 'HEALTHCARE_WORKER' && (
+        {role === "HEALTHCARE_WORKER" && (
           <div className="space-y-4 mb-6 animate-in slide-in-from-top-2 duration-300">
             <label className="block">
-              <span className="block text-sm font-medium text-slate-700 mb-1.5">License Number</span>
+              <span className="block text-sm font-medium text-slate-700 mb-1.5">
+                License Number
+              </span>
               <input
                 type="text"
                 value={licenseNumber}
@@ -221,7 +239,9 @@ export default function Signup() {
             </label>
 
             <label className="block">
-              <span className="block text-sm font-medium text-slate-700 mb-1.5">Job Title</span>
+              <span className="block text-sm font-medium text-slate-700 mb-1.5">
+                Job Title
+              </span>
               <input
                 type="text"
                 value={jobTitle}
@@ -233,7 +253,9 @@ export default function Signup() {
             </label>
 
             <label className="block">
-              <span className="block text-sm font-medium text-slate-700 mb-1.5">Facility</span>
+              <span className="block text-sm font-medium text-slate-700 mb-1.5">
+                Facility
+              </span>
               <select
                 value={facilityName}
                 onChange={(e) => setFacilityName(e.target.value)}
@@ -254,21 +276,25 @@ export default function Signup() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-600 transition-colors ${loading ? 'opacity-75 cursor-not-allowed' : ''
-            }`}
+          className={`w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-600 transition-colors ${
+            loading ? "opacity-75 cursor-not-allowed" : ""
+          }`}
         >
-          {loading ? 'Creating Account...' : 'Create Account'}
+          {loading ? "Creating Account..." : "Create Account"}
         </button>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-slate-500">
-            Already have an account?{' '}
-            <a href="/" className="font-medium text-yellow-700 hover:text-yellow-800 hover:underline">
+            Already have an account?{" "}
+            <a
+              href="/"
+              className="font-medium text-yellow-700 hover:text-yellow-800 hover:underline"
+            >
               Sign in
             </a>
           </p>
         </div>
       </form>
     </div>
-  )
+  );
 }

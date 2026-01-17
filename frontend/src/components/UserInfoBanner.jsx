@@ -1,12 +1,12 @@
-import React from 'react';
+import React from "react";
 
 export default function UserInfoBanner({ user }) {
   if (!user || !user.patient) return null;
 
   // Format last login date if available
-  const formattedLastLogin = user.last_login 
-    ? new Date(user.last_login).toLocaleString() 
-    : 'First Login';
+  const formattedLastLogin = user.last_login
+    ? new Date(user.last_login).toLocaleString()
+    : "First Login";
 
   return (
     <div className="bg-yellow-100 border-b border-yellow-200">
@@ -16,11 +16,11 @@ export default function UserInfoBanner({ user }) {
         </div>
         <div className="flex space-x-6">
           <span className="flex items-center">
-            <span className="font-medium mr-1">National ID:</span> 
-            {user.national_id || 'N/A'}
+            <span className="font-medium mr-1">National ID:</span>
+            {user.national_id || "N/A"}
           </span>
           <span className="flex items-center">
-            <span className="font-medium mr-1">Last Login:</span> 
+            <span className="font-medium mr-1">Last Login:</span>
             {formattedLastLogin}
           </span>
         </div>
